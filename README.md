@@ -3,12 +3,19 @@
 Contents
 ========
 
- * [Usage]
+ * [Kubernetes Usage]
+ * [Docker-Compose Usage]
 
-### Usage
+
+### Kubernetes Usage
 ---
 
 1. `kubectl create -f ./zookeeper-cluster.yaml`
+
+### Docker-Compose Usage
+---
+
+1. `docker-compose up`
 
 
 ### Want to Contribute?
