@@ -1,0 +1,32 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: zoo2
+  name: zoo2
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: zoo2
+    spec:
+      containers:
+      - env:
+        - name: ZOO_MY_ID
+          value: "2"
+        - name: ZOO_SERVERS
+          value: server.1=zoo1:2888:3888 server.2=0.0.0.0:2888:3888 server.3=zoo3:2888:3888
+        image: zookeeper
+        name: zoo2
+        ports:
+        - containerPort: 2181
+        - containerPort: 2888
+        - containerPort: 3888
+        resources: {}
+      hostname: zoo2
+      restartPolicy: Always
+status: {}
