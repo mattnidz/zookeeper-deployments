@@ -1,5 +1,6 @@
 # Zookeeper deployment
 
+
 Contents
 ========
 
@@ -10,11 +11,12 @@ Contents
 ### Kubernetes Usage
 ---
 
-1. `kubectl create -f ./zookeeper-cluster.yaml`
+1. `kubectl create -f kubernetes/zookeeper-cluster.yaml`
 
 ### Docker-Compose Usage
 ---
 
+1. `cd docker`
 1. `docker-compose up`
 
 
