@@ -5,13 +5,15 @@
 replicaCount: 1
 
 image:
-  repository: nginx
-  tag: stable
+  repository: zookeeper
+  #tag: stable
   pullPolicy: IfNotPresent
 
 service:
   type: ClusterIP
-  port: 80
+  peerport: 2888
+  leaderport: 3888
+  clientport: 2181
 
 ingress:
   enabled: false

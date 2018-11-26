@@ -10,10 +10,16 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: http
-      protocol: TCP
-      name: http
+    - port: {{ .Values.service.peerport }}
+      name: peerport
+    - port: {{ .Values.service.leaderport }}
+      name: leaderport
+    - port: {{ .Values.service.clientport }}
+      name: clientport
   selector:
     app: {{ template "zookeeper.name" . }}
     release: {{ .Release.Name }}
+status:
+  loadBalancer: {}
+
+

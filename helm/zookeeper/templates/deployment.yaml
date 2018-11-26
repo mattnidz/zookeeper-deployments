@@ -24,17 +24,23 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - name: http
-              containerPort: 80
+            - name: peerport
+              containerPort: 2888
+              protocol: TCP
+            - name: leaderport
+              containerPort: 3888
+              protocol: TCP
+            - name: clientport
+              containerPort: 2181
               protocol: TCP
           livenessProbe:
             httpGet:
               path: /
-              port: http
+              port: clientport
           readinessProbe:
             httpGet:
               path: /
-              port: http
+              port: clientport
           resources:
 {{ toYaml .Values.resources | indent 12 }}
     {{- with .Values.nodeSelector }}
