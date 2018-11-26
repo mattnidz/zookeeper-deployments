@@ -21,8 +21,13 @@ spec:
     spec:
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}"
+          image: {{ .Values.image.repository }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: ZOO_MY_ID
+              value: "1"
+            - name: ZOO_SERVERS
+              value: server.1={{ template "zookeeper.fullname" . }}:2888:3888
           ports:
             - name: peerport
               containerPort: 2888
@@ -33,25 +38,5 @@ spec:
             - name: clientport
               containerPort: 2181
               protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /
-              port: clientport
-          readinessProbe:
-            httpGet:
-              path: /
-              port: clientport
-          resources:
-{{ toYaml .Values.resources | indent 12 }}
-    {{- with .Values.nodeSelector }}
-      nodeSelector:
-{{ toYaml . | indent 8 }}
-    {{- end }}
-    {{- with .Values.affinity }}
-      affinity:
-{{ toYaml . | indent 8 }}
-    {{- end }}
-    {{- with .Values.tolerations }}
-      tolerations:
-{{ toYaml . | indent 8 }}
-    {{- end }}
+          hostname: {{ template "zookeeper.name" . }}
+
