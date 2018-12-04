@@ -1,5 +1,5 @@
 apiVersion: apps/v1beta2
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ template "zookeeper.fullname" . }}
   labels:
@@ -8,6 +8,7 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
+  serviceName: {{ template "zookeeper.fullname" . }}-headless
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
@@ -19,24 +20,61 @@ spec:
         app: {{ template "zookeeper.name" . }}
         release: {{ .Release.Name }}
     spec:
+      initContainers:
+        - name: init-scripts
+          image: busybox
+          command: ['sh', '-c', 'cp /scripts/* /etc/pre-install/ && chmod +x /etc/pre-install/zk-entrypoint.sh']
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+            - name: pre-install
+              mountPath: /etc/pre-install
+      volumes:
+        - name: pre-install
+          emptyDir: {}
+        - name: scripts
+          configMap:
+            name: zk-config
       containers:
-        - name: {{ .Chart.Name }}
+        - name: "{{ template "zookeeper.fullname" . }}"
           image: {{ .Values.image.repository }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["bash", "-c"]
+          args: ["/etc/pre-install/zk-entrypoint.sh ; /docker-entrypoint.sh zkServer.sh start-foreground"]
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+            - name: pre-install
+              mountPath: /etc/pre-install
+      volumes:
+        - name: pre-install
+          emptyDir: {}
+        - name: scripts
+          configMap:
+            name: zk-config
           env:
-            - name: ZOO_MY_ID
-              value: "1"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: ZOO_SERVERS
-              value: server.1={{ template "zookeeper.fullname" . }}:2888:3888
+                {{- $replicaCount := int .Values.replicaCount }}
+                {{- $peerPort := int .Values.service.peerport }}
+                {{- $leaderPort := int .Values.service.leaderport }}
+                {{- $releaseNamespace := .Release.Namespace }}
+                {{- $zookeeperFullname := include "zookeeper.fullname" . }}
+                {{- $zookeeperHeadlessServiceName := printf "%s-%s" $zookeeperFullname "headless" | trunc 63  }}
+              value: 
+                {{range $i, $e := until $replicaCount }}{{ $zookeeperFullname }}-{{ $e }}.{{ $zookeeperHeadlessServiceName }}.{{ $releaseNamespace }}.svc.cluster.local:{{ $peerPort }}:{{ $leaderPort }} {{ end }}  
           ports:
             - name: peerport
-              containerPort: 2888
+              containerPort: {{ .Values.service.peerport }}
               protocol: TCP
             - name: leaderport
-              containerPort: 3888
+              containerPort: {{ .Values.service.leaderport }}
               protocol: TCP
             - name: clientport
-              containerPort: 2181
+              containerPort: {{ .Values.service.clientport }}
               protocol: TCP
-          hostname: {{ template "zookeeper.name" . }}
+          hostname: {{ template "zookeeper.fullname" . }}
 
